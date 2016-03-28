@@ -1,4 +1,9 @@
 SDK-gcc-1.0/bin/
 SDK-gcc-1.0/build/
 *.tar.gz
+
+# ignore tags files from Ctags
 tags
+
+# ignore backup files from Vim
+*~
