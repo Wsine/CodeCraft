@@ -7,3 +7,7 @@ tags
 
 # ignore backup files from Vim
 *~
+
+# ignore YCM completion plugin configuration files
+.ycm_extra_conf.py
+.ycm_extra_conf.pyc
