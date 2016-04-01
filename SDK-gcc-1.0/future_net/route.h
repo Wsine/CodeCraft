@@ -6,6 +6,7 @@
 void search_route(char *graph[5000], int edge_num, char *condition);
 void read_topo(char *topo[], int edge_num);
 void read_demand(char *demand); 
+void BFS(int V);
 
 struct Edge{
     int from;
