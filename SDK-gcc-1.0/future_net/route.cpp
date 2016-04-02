@@ -25,7 +25,7 @@ class Group {
 public:
 	Array points;
 	List route;
-	double adapt;
+	int adapt;
 	double p_live;
 	bool visited[MAX_MATRIX_LENGTH];
 	bool dfs_visited[MAX_MATRIX_LENGTH];
@@ -37,7 +37,7 @@ public:
 	void initGroup();
 	void calFitness();
 	void insertValue();
-	void dfsInit();
+	void dfsInit(Array& path);
 	void dfs(int from, int to, int weight, int depth);
 };
 
@@ -69,8 +69,10 @@ int best_weight;
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
-    //unsigned short result[] = {2, 6, 3};//示例中的一个解
-
+    read_map();
+    // print_map();
+    read_demand();
+    // print_demand();
     startGene();
 }
 
@@ -141,7 +143,7 @@ void print_map() {
 	printf("\n");
 }
 
-void print_aim() {
+void print_demand() {
 	printf("The Demand is :\n");
 	printf("source %d -> destination %d\n", source, destination);
 	printf("aim is : ");
@@ -175,16 +177,52 @@ void Group::initGroup() {
 }
 
 void Group::calFitness() {
-
+	bool pass = true;
+	int weight;
+	List::iterator itList = this->route.begin();
+	for (; itList + 1 != this->route.end(); itList++) {
+		if (matrix[*itList][*(itList + 1)] != -1)
+			weight += (matrix[*itList][*(itList + 1)]);
+		else {
+			pass = false;
+			break;
+		}
+	}
+	if (!pass) {
+		this->route.clear();
+	} else {
+		this->adapt = weight;
+	}
 }
 
 void Group::insertValue() {
-	
+	this->route.clear();
+	Array::iterator it = this->points.begin();
+	for (; it != this->points.end(); it++) {
+		this->route.push_back(*it);
+	}
+
+	Array dfs_path;
+	List::iterator itList = this->route.begin() + 1;
+	List::iterator itListTemp;
+	for (; itList + 2 != this->route.end(); itList++) {
+		if (matrix[*itList][*(itList + 1)] == -1) {
+			dfsInit(dfs_path);
+			dfs_path.push_back(*itList);
+			dfs(*itList, *(itList + 1), 0, 0, dfs_path);
+			it = dfs_path.begin() + 1;
+			itListTemp = itList;
+			for (; it != dfs_path.end(); it++) {
+				this->route.insert(itListTemp, *it);
+				itListTemp++;
+			}
+		}
+	}
 }
 
-void Group::dfsInit() {
+void Group::dfsInit(Array& path) {
 	memcpy(this->dfs_visited, this->visited, sizeof(this->dfs_visited));
-
+	path.clear();
 	this->dfs_part_route.clear();
 	if (matrixLength < 20)
 		this->dfs_max_depth = 2;

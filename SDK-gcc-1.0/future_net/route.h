@@ -8,7 +8,7 @@ void read_map(char *topo[5000], int edge_num);
 void read_demand(char *demand);
 void record_path(const Array&);
 void print_map();
-void print_aim();
+void print_demand();
 void startGene();
 
 #endif
