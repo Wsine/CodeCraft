@@ -8,14 +8,17 @@
 #include <vector>
 #include <iostream>
 #include <list>
+#include <map>
 using namespace std;
 
+#define DEBUG 0
 #define MAX_MATRIX_LENGTH 600
 #define INF 1e8
 #define GROUP_NUM 100
 #define CROSS_PROB 0.8
 #define HETERO_PROB 0.6
 #define SELECT_DIVIDE 4
+#define DFS_PROB 0.8
 #define ITERATIONS 100
 
 typedef vector<int> Array;
@@ -39,6 +42,8 @@ public:
 	void insertValue();
 	void dfsInit(Array& path);
 	void dfs(int from, int to, int weight, int depth, Array& path);
+	void print();
+	void printGene();
 };
 
 class Nature{
@@ -50,6 +55,7 @@ public:
 	void cross();
 	void hetero();
 	void calAllFitness();
+	void print();
 	static bool cmp(const Group& a, const Group& b);
 };
 
@@ -66,17 +72,23 @@ vector<int> table[MAX_MATRIX_LENGTH];
 int matrixLength;
 int source, destination;
 vector<int> v_demand;
+List bestRouteInHistory;
 int best_weight;
 
 void record_path(Array&);
+void print_route(List&);
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
-    read_map(topo, edge_num);
-    // print_map();
-    read_demand(demand);
-    // print_demand();
-    startGene();
+	read_map(topo, edge_num);
+	#if DEBUG
+	// print_map();
+	#endif
+	read_demand(demand);
+	#if DEBUG
+	// print_demand();
+	#endif
+	startGene();
 }
 
 void read_map(char *topo[5000], int edge_num) {
@@ -85,16 +97,16 @@ void read_map(char *topo[5000], int edge_num) {
 	for (int i = 0; i < edge_num; i++) {
 		sscanf(topo[i], "%d,%d,%d,%d", &index, &from, &to, &weight);
 
-		if (matrix[from][to].weight != -1 && weight < matrix[from][to].weight) {
+		if (matrix[from][to].weight == -1) {
 			matrix[from][to] = Map(index, weight);
-		} else if (matrix[from][to].weight == -1) {
+		} else if (weight < matrix[from][to].weight) {
 			matrix[from][to] = Map(index, weight);
 		}
 		if (from > matrixLength) matrixLength = from;
 		if (to > matrixLength) matrixLength = to;
 
 		bool existed = false;
-		for (int j = 0; j < table[from].size(); j++) {
+		for (unsigned int j = 0; j < table[from].size(); j++) {
 			if (table[from][j] == to) {
 				existed = true;
 				break;
@@ -106,20 +118,17 @@ void read_map(char *topo[5000], int edge_num) {
 }
 
 void read_demand(char *readline) {
-	char *split = ",";
 	char line[strlen(readline)];
 	strcpy(line, readline);
 
-	char* p = strtok(line, split);
+	char* p = strtok(line, ",");
 	source = atoi(p);
 
-	p = strtok(NULL, split);
+	p = strtok(NULL, ",");
 	destination = atoi(p);;
 
-	split = "|";
-	while(true)
-	{
-		p = strtok(NULL, split);
+	while(true) {
+		p = strtok(NULL, "|");
 		if(p == NULL || *p == '\n')
 			break;
 		v_demand.push_back(atoi(p));
@@ -180,6 +189,10 @@ void Group::initGroup() {
 }
 
 void Group::calFitness() {
+	this->insertValue();
+	#if DEBUG
+	// printf("insert successfully\n");
+	#endif
 	bool pass = true;
 	int weight;
 	List::iterator itList = this->route.begin();
@@ -197,6 +210,7 @@ void Group::calFitness() {
 		this->route.clear();
 	} else {
 		this->adapt = weight;
+		bestRouteInHistory = this->route;
 	}
 }
 
@@ -208,20 +222,41 @@ void Group::insertValue() {
 	}
 
 	Array dfs_path;
-	int listSize = this->route.size();
 	List::iterator itList = this->route.begin();
 	List::iterator itListNext = itList;
 	itListNext++;
+	int index = 0;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
 		if (matrix[*itList][*itListNext].weight == -1) {
 			dfsInit(dfs_path);
 			dfs_path.push_back(*itList);
 			dfs(*itList, *itListNext, 0, 0, dfs_path);
-			it = dfs_path.begin() + 1;
-			for (; it + 1 != dfs_path.end(); it++) {
-				this->visited[*it] = true;
-				this->route.insert(itListNext, *it);
-				itList++;
+
+			if (dfs_part_route.size() >= 3) {
+				it = dfs_part_route.begin() + 1;
+				for (; it + 1 != dfs_part_route.end(); it++) {
+					this->visited[*it] = true;
+					this->route.insert(itListNext, *it);
+					itList++;
+				}
+			}
+		} else {
+			srand((unsigned)time(NULL));
+			double cross_p = (rand() % 100) * 1.0 / 100;
+			if (cross_p < DFS_PROB) {
+				dfsInit(dfs_path);
+				this->dfs_weight = matrix[*itList][*itListNext].weight;
+				dfs_path.push_back(*itList);
+				dfs(*itList, *itListNext, 0, 0, dfs_path);
+
+				if (dfs_part_route.size() >= 3) {
+					it = dfs_part_route.begin() + 1;
+					for (; it + 1 != dfs_part_route.end(); it++) {
+						this->visited[*it] = true;
+						this->route.insert(itListNext, *it);
+						itList++;
+					}
+				}
 			}
 		}
 	}
@@ -231,10 +266,10 @@ void Group::dfsInit(Array& path) {
 	memcpy(this->dfs_visited, this->visited, sizeof(this->dfs_visited));
 	path.clear();
 	this->dfs_part_route.clear();
-	if (matrixLength < 20)
-		this->dfs_max_depth = 2;
+	if (matrixLength < 50)
+		this->dfs_max_depth = 5;
 	else
-		this->dfs_max_depth = dfs_max_depth / 10;
+		this->dfs_max_depth = matrixLength / 10;
 	this->dfs_weight = INF;
 }
 
@@ -249,13 +284,41 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 	if (depth >= dfs_max_depth) return;
 	vector<int>::iterator it = table[from].begin();
 	for (; it != table[from].end(); it++) {
-		if (!this->dfs_visited[*it]) {
+		if (!this->dfs_visited[*it] || *it == to) {
 			this->dfs_visited[*it] = true;
 			path.push_back(*it);
 			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 			path.pop_back();
 			this->dfs_visited[*it] = false;
 		}
+	}
+}
+
+void Group::print() {
+	if (!this->route.empty()) {
+		List::iterator itList = this->route.begin();
+		for (; itList != this->route.end(); itList++) {
+			printf("%d ", *itList);
+		}
+		printf("\n");
+	} else {
+		printf("route empty\n");
+	}
+}
+
+void Group::printGene() {
+	Array::iterator it = this->points.begin();
+	for (; it != this->points.end(); it++) {
+		printf("%d ", *it);
+	}
+	printf("\n");
+}
+
+void Nature::print() {
+	printf("\n");
+	for (int i = 0; i < GROUP_NUM; i++) {
+		printf("Group %d : ", i);
+		group[i].printGene();
 	}
 }
 
@@ -290,10 +353,11 @@ void Nature::cross() {
 	}
 
 	int p1,p2 ; //交换基因断点 
-	int map1[v_demand.size() + 2],map2[v_demand.size() + 2];
+	map<int, int> map1,map2;
 
 	for(unsigned int i = 0;i < crossNum.size() ;i += 2)
 	{
+		if (i + 1 >= crossNum.size())	break;
 		int n1 = crossNum[i];
 		int n2 = crossNum[i + 1];
 		
@@ -362,7 +426,6 @@ void Nature::cross() {
 			}
 	}
 
-	
 
 }
 
@@ -399,11 +462,24 @@ void startGene()
 	Nature* nature = new Nature();
 	nature->calAllFitness();
 
+
 	for(int iter = 0;iter < ITERATIONS;iter++){
 		nature->select();
+#if DEBUG
+		printf("select successfully\n");
+#endif
 		nature->cross();
+#if DEBUG
+		printf("cross successfully\n");
+#endif
 		nature->hetero();
+#if DEBUG
+		printf("hetero successfully\n");
+#endif
 		nature->calAllFitness();
+#if DEBUG
+		nature->print();
+#endif
 	}
 
 	int bestGroupIndex = 0;
@@ -412,20 +488,19 @@ void startGene()
 			bestGroupIndex = i;
 
 	//NA
-	if(nature->group[bestGroupIndex].route.empty()){
+	if(bestRouteInHistory.empty()){
 		delete nature;
 		return ;
 	}
 
-	List& bestRoute = nature->group[bestGroupIndex].route;
 	Array edge;
 	int sum_cost = 0;
 	printf("Route: ");
 	List::iterator it_next,it_cur;
-	it_next = it_cur = bestRoute.begin();
+	it_next = it_cur = bestRouteInHistory.begin();
 	it_next++;
 
-	for(;it_next != bestRoute.end();it_cur++,it_next++){
+	for(;it_next != bestRouteInHistory.end();it_cur++,it_next++){
 		sum_cost += matrix[*it_cur][*it_next].weight;
 		edge.push_back(matrix[*it_cur][*it_next].index);
 		printf("%d ",*it_cur);
@@ -435,4 +510,15 @@ void startGene()
 	record_path(edge);
 
 	delete nature;
+}
+
+void print_route(List& arr) {
+	printf("Route: ");
+	List::iterator it_cur;
+	it_cur = arr.begin();
+
+	for(;it_cur != arr.end();it_cur++){
+		printf("%d ",*it_cur);
+	}
+	printf("\n");
 }
