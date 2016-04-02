@@ -14,14 +14,6 @@ struct Edge{
     int to;
     int index;
     int weight;
-//    Edge(){};
-//    Edge(int _from, int _to, int _index, int _weight){
-//        from = _from;
-//        to = _to;
-//        index = _index;
-//        weight = _weight;
-//    };
-//    ~Edge(){};
 };
 
 #endif
