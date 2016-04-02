@@ -49,6 +49,7 @@ public:
 	void select();
 	void cross();
 	void hetero();
+	void calAllFitness();
 	static bool cmp(const Group& a, const Group& b);
 };
 
@@ -214,6 +215,12 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 	}
 }
 
+void Nature::calAllFitness()
+{
+	for(int i = 0;i < GROUP_NUM;i++){
+		group[i].calFitness();
+	}
+}
 void Nature::select() {
 	sort(group, group + GROUP_NUM, cmp);
 	int bais = GROUP_NUM/SELECT_DIVIDE;
@@ -346,13 +353,13 @@ bool Nature::cmp(const Group& a, const Group& b) {
 void startGene()
 {
 	Nature* nature = new Nature();
-	nature->calFitness();
+	nature->calAllFitness();
 
-	for(int iter = 0;iter < ITERATIONS;i++){
+	for(int iter = 0;iter < ITERATIONS;iter++){
 		nature->select();
 		nature->cross();
 		nature->hetero();
-		nature->calFitness();
+		nature->calAllFitness();
 	}
 
 	int bestGroupIndex = 0;
@@ -371,12 +378,12 @@ void startGene()
 	int sum_cost = 0;
 	printf("Route: ");
 	List::iterator it = bestRoute.begin();
-	for(;it + 1 != bestRoute.end();it++){
+	for(;it != bestRoute.end();it++){
 		sum_cost += matrix[*it][*(it + 1)].weight;
 		edge.push_back(matrix[*it][*(it + 1)].index);
 		printf("%d ",*it);
 	}
-	printf("%d \n",*bestRoute.rbegin()); //last element
+	printf("\n"); //last element
 
 	record_path(edge);
 
