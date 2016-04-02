@@ -88,6 +88,7 @@ void search_route(char *topo[5000], int edge_num, char *demand) {
 	#if DEBUG
 	// print_demand();
 	#endif
+	best_weight = INF;
 	startGene();
 }
 
@@ -210,7 +211,10 @@ void Group::calFitness() {
 		this->route.clear();
 	} else {
 		this->adapt = weight;
-		bestRouteInHistory = this->route;
+		if (weight < best_weight) {
+			best_weight = weight;
+			bestRouteInHistory = this->route;
+		}
 	}
 }
 
@@ -225,7 +229,6 @@ void Group::insertValue() {
 	List::iterator itList = this->route.begin();
 	List::iterator itListNext = itList;
 	itListNext++;
-	int index = 0;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
 		if (matrix[*itList][*itListNext].weight == -1) {
 			dfsInit(dfs_path);
