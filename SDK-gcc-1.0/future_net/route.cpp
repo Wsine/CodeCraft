@@ -45,7 +45,7 @@ class Nature{
 public:
 	Group group[GROUP_NUM];
 /* Function */
-	Nature();
+	// Nature();
 	void select();
 	void cross();
 	void hetero();
@@ -68,13 +68,13 @@ int source, destination;
 vector<int> v_demand;
 int best_weight;
 
-void record_path(const Array&);
+void record_path(Array&);
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
-    read_map();
+    read_map(topo, edge_num);
     // print_map();
-    read_demand();
+    read_demand(demand);
     // print_demand();
     startGene();
 }
@@ -126,7 +126,7 @@ void read_demand(char *readline) {
 	}
 }
 
-void record_path(const Array& path) {
+void record_path(Array& path) {
 	Array::iterator it = path.begin();
 	for (; it != path.end(); it++) {
 		record_result(*it);
@@ -186,8 +186,8 @@ void Group::calFitness() {
 	List::iterator itListNext = this->route.begin();
 	itListNext++;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
-		if (matrix[*itList][*itListNext] != -1)
-			weight += (matrix[*itList][*itListNext]);
+		if (matrix[*itList][*itListNext].weight != -1)
+			weight += (matrix[*itList][*itListNext].weight);
 		else {
 			pass = false;
 			break;
@@ -213,7 +213,7 @@ void Group::insertValue() {
 	List::iterator itListNext = itList;
 	itListNext++;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
-		if (matrix[*itList][*itListNext] == -1) {
+		if (matrix[*itList][*itListNext].weight == -1) {
 			dfsInit(dfs_path);
 			dfs_path.push_back(*itList);
 			dfs(*itList, *itListNext, 0, 0, dfs_path);
@@ -252,7 +252,7 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 		if (!this->dfs_visited[*it]) {
 			this->dfs_visited[*it] = true;
 			path.push_back(*it);
-			dfs(*it, to, weight + matrix[from][*it], depth + 1, path);
+			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 			path.pop_back();
 			this->dfs_visited[*it] = false;
 		}
@@ -292,7 +292,7 @@ void Nature::cross() {
 	int p1,p2 ; //交换基因断点 
 	int map1[v_demand.size() + 2],map2[v_demand.size() + 2];
 
-	for(int i = 0;i < crossNum.size() ;i += 2)
+	for(unsigned int i = 0;i < crossNum.size() ;i += 2)
 	{
 		int n1 = crossNum[i];
 		int n2 = crossNum[i + 1];
@@ -315,7 +315,7 @@ void Nature::cross() {
 		{
 			swap(group[n1].points[j] , group[n2].points[j]);
 		}
-		for(int j = p2 + 1;j < points.size() - 1;j++)
+		for(unsigned int j = p2 + 1;j < group[n1].points.size() - 1;j++)
 		{
 			swap(group[n1].points[j] , group[n2].points[j]);
 		}
@@ -331,7 +331,7 @@ void Nature::cross() {
 				}
 			}
 		
-		for(int j = p2 + 1;j < points.size() - 1;j++)
+		for(unsigned int j = p2 + 1;j < group[n1].points.size() - 1;j++)
 			for(int k = p1;k <= p2;k++)
 			{
 				if(group[n1].points[j] == group[n1].points[k])
@@ -351,7 +351,7 @@ void Nature::cross() {
 				}
 			}
 		
-		for(int j = p2 + 1;j < points.size() - 1;j++)
+		for(unsigned int j = p2 + 1;j < group[n2].points.size() - 1;j++)
 			for(int k = p1;k <= p2;k++)
 			{
 				if(group[n2].points[j] == group[n2].points[k])
@@ -385,7 +385,7 @@ void Nature::hetero() {
 		int p1 = rand() % (v_demand.size()) + 1;   //get a number from 1 to size - 2, totally (size - 2)
 		int p2 = rand() % (v_demand.size()) + 1;
 
-		swap(group[pos][p1], group[pos][p2]);
+		swap(group[pos].points[p1], group[pos].points[p2]);
 	}
 }
 
@@ -408,7 +408,7 @@ void startGene()
 
 	int bestGroupIndex = 0;
 	for(int i = 0;i < GROUP_NUM;i++)
-		if(group[i].adapt < group[bestGroupIndex].adapt)
+		if(nature->group[i].adapt < nature->group[bestGroupIndex].adapt)
 			bestGroupIndex = i;
 
 	//NA
