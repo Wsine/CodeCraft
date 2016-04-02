@@ -10,6 +10,7 @@
 using namespace std;
 
 #define MAX_MATRIX_LENGTH 600
+#define INF 1e8
 
 struct Map {
 	int index;
@@ -19,6 +20,7 @@ struct Map {
 };
 
 Map matrix[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
+vector< vector<int> > table;
 
 int matrixLength;
 bool visited[MAX_MATRIX_LENGTH];
@@ -35,14 +37,18 @@ void search_route(char *topo[5000], int edge_num, char *demand) {
     print_map();
     read_aim(demand);
     print_aim();
-    memset(visited, false, sizeof(visited));
-    v_point.clear();
-    v_path.clear();
-    best_weight = INT_MAX;
-    visited[source] = true;
-    v_point.push_back(source);
-    dfs(source, 0);
-    record_path();
+    if (edge_num < 50) {
+	    memset(visited, false, sizeof(visited));
+	    v_point.clear();
+	    v_path.clear();
+	    best_weight = INT_MAX;
+	    visited[source] = true;
+	    v_point.push_back(source);
+	    dfs(source, 0);
+	    record_path();
+    } else {
+    	
+    }
 }
 
 void read_map(char *topo[5000], int edge_num) {
@@ -50,7 +56,11 @@ void read_map(char *topo[5000], int edge_num) {
 	matrixLength = -1;
 	for (int i = 0; i < edge_num; i++) {
 		sscanf(topo[i], "%d,%d,%d,%d", &index, &from, &to, &weight);
-		matrix[from][to] = Map(index, weight);
+		if (matrix[from][to].weight != -1 && weight < matrix[from][to].weight) {
+			matrix[from][to] = Map(index, weight);
+		} else if (matrix[from][to].weight == -1) {
+			matrix[from][to] = Map(index, weight);
+		}
 		if (from > matrixLength) matrixLength = from;
 		if (to > matrixLength) matrixLength = to;
 	}
