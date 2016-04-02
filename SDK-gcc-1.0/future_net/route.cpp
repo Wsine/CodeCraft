@@ -7,6 +7,7 @@
 #include <string.h>
 #include <vector>
 #include <iostream>
+#include <list>
 using namespace std;
 
 #define MAX_MATRIX_LENGTH 600
@@ -16,7 +17,6 @@ using namespace std;
 #define HETERO_PROB 0.6
 #define SELECT_DIVIDE 4
 #define ITERATIONS 100
-
 
 typedef vector<int> Array;
 typedef list<int> List;
@@ -38,7 +38,7 @@ public:
 	void calFitness();
 	void insertValue();
 	void dfsInit(Array& path);
-	void dfs(int from, int to, int weight, int depth);
+	void dfs(int from, int to, int weight, int depth, Array& path);
 };
 
 class Nature{
@@ -66,6 +66,8 @@ int matrixLength;
 int source, destination;
 vector<int> v_demand;
 int best_weight;
+
+void record_path(const Array&);
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
@@ -156,7 +158,7 @@ void print_demand() {
 
 Group::Group() {
 	this->route.clear();
-	this->adapt = -1.0;
+	this->adapt = -1;
 	this->p_live = -1.0;
 	initGroup();
 }
@@ -180,9 +182,11 @@ void Group::calFitness() {
 	bool pass = true;
 	int weight;
 	List::iterator itList = this->route.begin();
-	for (; itList + 1 != this->route.end(); itList++) {
-		if (matrix[*itList][*(itList + 1)] != -1)
-			weight += (matrix[*itList][*(itList + 1)]);
+	List::iterator itListNext = this->route.begin();
+	itListNext++;
+	for (; itListNext != this->route.end(); itList++, itListNext++) {
+		if (matrix[*itList][*itListNext] != -1)
+			weight += (matrix[*itList][*itListNext]);
 		else {
 			pass = false;
 			break;
@@ -203,18 +207,20 @@ void Group::insertValue() {
 	}
 
 	Array dfs_path;
-	List::iterator itList = this->route.begin() + 1;
-	List::iterator itListTemp;
-	for (; itList + 2 != this->route.end(); itList++) {
-		if (matrix[*itList][*(itList + 1)] == -1) {
+	int listSize = this->route.size();
+	List::iterator itList = this->route.begin();
+	List::iterator itListNext = itList;
+	itListNext++;
+	for (; itListNext != this->route.end(); itList++, itListNext++) {
+		if (matrix[*itList][*itListNext] == -1) {
 			dfsInit(dfs_path);
 			dfs_path.push_back(*itList);
-			dfs(*itList, *(itList + 1), 0, 0, dfs_path);
+			dfs(*itList, *itListNext, 0, 0, dfs_path);
 			it = dfs_path.begin() + 1;
-			itListTemp = itList;
-			for (; it != dfs_path.end(); it++) {
-				this->route.insert(itListTemp, *it);
-				itListTemp++;
+			for (; it + 1 != dfs_path.end(); it++) {
+				this->visited[*it] = true;
+				this->route.insert(itList, *it);
+				itList++;
 			}
 		}
 	}
