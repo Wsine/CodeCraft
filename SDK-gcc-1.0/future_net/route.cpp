@@ -24,6 +24,7 @@ typedef list<int> List;
 class Group {
 public:
 	Array points;
+	List route;
 	double adapt;
 	double p_live;
 	bool visited[MAX_MATRIX_LENGTH];
