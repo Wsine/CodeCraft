@@ -16,20 +16,26 @@ using namespace std;
 #define HETERO_PROB 0.6
 
 typedef vector<int> Array;
+typedef list<int> List;
 
 class Group {
 public:
 	Array points;
-	Array route;
+	List route;
 	double adapt;
 	double p_live;
 	bool visited[MAX_MATRIX_LENGTH];
-	int max_depth;
+	bool dfs_visited[MAX_MATRIX_LENGTH];
+	Array dfs_part_route;
+	int dfs_weight;
+	int dfs_max_depth;
 /* Function */
-	void initGroup(const Array& vec);
+	Group();
+	void initGroup();
 	void calFitness();
 	void insertValue();
-	void dfs(int from, int to, int depth);
+	void dfsInit();
+	void dfs(int from, int to, int weight, int depth);
 };
 
 class Nature{
@@ -127,8 +133,26 @@ void print_aim() {
 	printf("\n");
 }
 
-void Group::initGroup(const Array& vec) {
+Group::Group() {
+	this->route.clear();
+	this->adapt = -1.0;
+	this->p_live = -1.0;
+	initGroup();
+}
 
+void Group::initGroup() {
+	memset(this->visited, false, sizeof(this->visited));
+	this->points.clear();
+	this->points.push_back(source);
+	this->visited[source] = true;
+	vector<int>::iterator it = v_demand.begin();
+	for (; it != v_demand.end(); it++) {
+		this->points.push_back(*it);
+		this->visited[*it] = true;
+	}
+	random_shuffle(this->points.begin() + 1, this->points.end());
+	this->points.push_back(destination);
+	this->visited[destination] = true;
 }
 
 void Group::calFitness() {
@@ -136,11 +160,39 @@ void Group::calFitness() {
 }
 
 void Group::insertValue() {
-
+	
 }
 
-void Group::dfs(int from, int to, int depth) {
+void Group::dfsInit() {
+	memcpy(this->dfs_visited, this->visited, sizeof(this->dfs_visited));
 
+	this->dfs_part_route.clear();
+	if (matrixLength < 20)
+		this->dfs_max_depth = 2;
+	else
+		this->dfs_max_depth = dfs_max_depth / 10;
+	this->dfs_weight = INF;
+}
+
+void Group::dfs(int from, int to, int weight, int depth, Array& path) {
+	if (from == to) {
+		if (weight < dfs_weight) {
+			dfs_weight = weight;
+			this->dfs_part_route = path;
+		}
+		return;
+	}
+	if (depth >= dfs_max_depth) return;
+	vector<int>::iterator it = table[from].begin();
+	for (; it != table[from].end(); it++) {
+		if (!this->dfs_visited[*it]) {
+			this->dfs_visited[*it] = true;
+			path.push_back(*it);
+			dfs(*it, to, weight + matrix[from][*it], depth + 1, path);
+			path.pop_back();
+			this->dfs_visited[*it] = false;
+		}
+	}
 }
 
 void Nature::select() {
