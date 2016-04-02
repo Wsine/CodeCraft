@@ -1,4 +1,16 @@
 SDK-gcc-1.0/bin/
 SDK-gcc-1.0/build/
 *.tar.gz
-myanswer.csv
+
+# ignore tags files from Ctags
+tags
+
+# ignore backup files from Vim
+*~
+
+# ignore YCM completion plugin configuration files
+.ycm_extra_conf.py
+.ycm_extra_conf.pyc
+
+# ignore the output result for each case
+my_result.csv
