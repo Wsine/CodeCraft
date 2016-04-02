@@ -219,7 +219,7 @@ void Group::insertValue() {
 			it = dfs_path.begin() + 1;
 			for (; it + 1 != dfs_path.end(); it++) {
 				this->visited[*it] = true;
-				this->route.insert(itList, *it);
+				this->route.insert(itListNext, *it);
 				itList++;
 			}
 		}
