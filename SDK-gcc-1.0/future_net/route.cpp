@@ -31,7 +31,6 @@ public:
 	int adapt;
 	double p_live;
 	bool visited[MAX_MATRIX_LENGTH];
-	bool dfs_visited[MAX_MATRIX_LENGTH];
 	Array dfs_part_route;
 	int dfs_weight;
 	int dfs_max_depth;
@@ -264,7 +263,6 @@ void Group::insertValue() {
 }
 
 void Group::dfsInit(Array& path) {
-	memcpy(this->dfs_visited, this->visited, sizeof(this->dfs_visited));
 	path.clear();
 	this->dfs_part_route.clear();
 	if (matrixLength < 50)
@@ -285,12 +283,12 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 	if (depth >= dfs_max_depth) return;
 	vector<int>::iterator it = table[from].begin();
 	for (; it != table[from].end(); it++) {
-		if (!this->dfs_visited[*it]) {
-			this->dfs_visited[*it] = true;
+		if (!this->visited[*it]) {
+			this->visited[*it] = true;
 			path.push_back(*it);
 			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 			path.pop_back();
-			this->dfs_visited[*it] = false;
+			this->visited[*it] = false;
 		} else if (*it == to) {
 			path.push_back(*it);
 			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
