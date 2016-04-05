@@ -120,7 +120,7 @@ void read_map(char *topo[5000], int edge_num) {
 
 void read_demand(char *readline) {
 	char reqs[3000];
-	sscanf(demand, "%d,%d,%s", &source, &destination, reqs);
+	sscanf(readline, "%d,%d,%s", &source, &destination, reqs);
 
 	char *pch;
 	int temp;
