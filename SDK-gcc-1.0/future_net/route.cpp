@@ -285,12 +285,16 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 	if (depth >= dfs_max_depth) return;
 	vector<int>::iterator it = table[from].begin();
 	for (; it != table[from].end(); it++) {
-		if (!this->dfs_visited[*it] || *it == to) {
+		if (!this->dfs_visited[*it]) {
 			this->dfs_visited[*it] = true;
 			path.push_back(*it);
 			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 			path.pop_back();
 			this->dfs_visited[*it] = false;
+		} else if (*it == to) {
+			path.push_back(*it);
+			dfs(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
+			path.pop_back();
 		}
 	}
 }
