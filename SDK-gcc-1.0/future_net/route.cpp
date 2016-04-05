@@ -14,12 +14,12 @@ using namespace std;
 #define DEBUG 0
 #define MAX_MATRIX_LENGTH 600
 #define INF 1e8
-#define GROUP_NUM 100
+#define GROUP_NUM 500
 #define CROSS_PROB 0.8
 #define HETERO_PROB 0.6
 #define SELECT_DIVIDE 4
 #define DFS_PROB 0.8
-#define ITERATIONS 100
+#define ITERATIONS 500
 
 typedef vector<int> Array;
 typedef list<int> List;
@@ -175,18 +175,18 @@ Group::Group() {
 }
 
 void Group::initGroup() {
-	memset(this->visited, false, sizeof(this->visited));
+	// memset(this->visited, false, sizeof(this->visited));
 	this->points.clear();
 	this->points.push_back(source);
-	this->visited[source] = true;
+	// this->visited[source] = true;
 	vector<int>::iterator it = v_demand.begin();
 	for (; it != v_demand.end(); it++) {
 		this->points.push_back(*it);
-		this->visited[*it] = true;
+		// this->visited[*it] = true;
 	}
 	random_shuffle(this->points.begin() + 1, this->points.end());
 	this->points.push_back(destination);
-	this->visited[destination] = true;
+	// this->visited[destination] = true;
 }
 
 void Group::calFitness() {
@@ -219,10 +219,12 @@ void Group::calFitness() {
 }
 
 void Group::insertValue() {
+	memset(this->visited, false, sizeof(this->visited));
 	this->route.clear();
 	Array::iterator it = this->points.begin();
 	for (; it != this->points.end(); it++) {
 		this->route.push_back(*it);
+		this->visited[*it] = true;
 	}
 
 	Array dfs_path;
