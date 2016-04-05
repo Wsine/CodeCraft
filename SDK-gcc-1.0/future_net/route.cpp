@@ -34,9 +34,9 @@ int best_weight;
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
 	read_map(topo, edge_num);
-	print_map();
+	// print_map();
 	read_aim(demand);
-	print_aim();
+	// print_aim();
 	if (edge_num < 50) {
 		memset(visited, false, sizeof(visited));
 		v_point.clear();
@@ -57,16 +57,16 @@ void read_map(char *topo[5000], int edge_num) {
 	for (int i = 0; i < edge_num; i++) {
 		sscanf(topo[i], "%d,%d,%d,%d", &index, &from, &to, &weight);
 
-		if (matrix[from][to].weight != -1 && weight < matrix[from][to].weight) {
+		if (matrix[from][to].weight == -1) {
 			matrix[from][to] = Map(index, weight);
-		} else if (matrix[from][to].weight == -1) {
+		} else if (weight < matrix[from][to].weight) {
 			matrix[from][to] = Map(index, weight);
 		}
 		if (from > matrixLength) matrixLength = from;
 		if (to > matrixLength) matrixLength = to;
 
 		bool existed = false;
-		for (int j = 0; j < table[from].size(); j++) {
+		for (unsigned int j = 0; j < table[from].size(); j++) {
 			if (table[from][j] == to) {
 				existed = true;
 				break;
