@@ -195,7 +195,7 @@ void Group::calFitness() {
 	// printf("insert successfully\n");
 	#endif
 	bool pass = true;
-	int weight;
+	int weight = 0;
 	List::iterator itList = this->route.begin();
 	List::iterator itListNext = this->route.begin();
 	itListNext++;
