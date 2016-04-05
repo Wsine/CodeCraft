@@ -363,6 +363,9 @@ void Nature::cross() {
 	for(unsigned int i = 0;i < crossNum.size() ;i += 2)
 	{
 		if (i + 1 >= crossNum.size())	break;
+
+		map1.clear();	map2.clear();
+
 		int n1 = crossNum[i];
 		int n2 = crossNum[i + 1];
 		
