@@ -29,7 +29,6 @@ public:
 	Array points;
 	List route;
 	int adapt;
-	double p_live;
 	bool visited[MAX_MATRIX_LENGTH];
 	Array dfs_part_route;
 	int dfs_weight;
@@ -43,6 +42,7 @@ public:
 	void dfs(int from, int to, int weight, int depth, Array& path);
 	void print();
 	void printGene();
+	inline Group& operator=(const Group& other);
 };
 
 class Nature{
@@ -165,7 +165,6 @@ void print_demand() {
 Group::Group() {
 	this->route.clear();
 	this->adapt = -1;
-	this->p_live = -1.0;
 	initGroup();
 }
 
@@ -315,6 +314,12 @@ void Group::printGene() {
 		printf("%d ", *it);
 	}
 	printf("\n");
+}
+
+Group& Group::operator=(const Group& other) {
+	this->points = other.points;
+	this->adapt = other.adapt;
+	return *this;
 }
 
 void Nature::print() {
