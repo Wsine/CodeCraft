@@ -119,20 +119,16 @@ void read_map(char *topo[5000], int edge_num) {
 }
 
 void read_demand(char *readline) {
-	char line[strlen(readline)];
-	strcpy(line, readline);
+	char reqs[3000];
+	sscanf(demand, "%d,%d,%s", &source, &destination, reqs);
 
-	char* p = strtok(line, ",");
-	source = atoi(p);
-
-	p = strtok(NULL, ",");
-	destination = atoi(p);;
-
-	while(true) {
-		p = strtok(NULL, "|");
-		if(p == NULL || *p == '\n')
-			break;
-		v_demand.push_back(atoi(p));
+	char *pch;
+	int temp;
+	pch = strtok(reqs, "|");
+	while(pch != NULL){
+		sscanf(pch, "%d", &temp);
+		v_demand.push_back(temp);
+		pch = strtok(NULL, "|");
 	}
 }
 
