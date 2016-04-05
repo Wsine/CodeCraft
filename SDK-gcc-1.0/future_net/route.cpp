@@ -490,11 +490,6 @@ void startGene()
 #endif
 	}
 
-	int bestGroupIndex = 0;
-	for(int i = 0;i < GROUP_NUM;i++)
-		if(nature->group[i].adapt < nature->group[bestGroupIndex].adapt)
-			bestGroupIndex = i;
-
 	//NA
 	if(bestRouteInHistory.empty()){
 		delete nature;
