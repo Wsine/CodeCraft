@@ -362,6 +362,7 @@ void Nature::cross() {
 
 	int p1,p2 ; //交换基因断点 
 	map<int, int> map1,map2;
+	map<int, int>::iterator itMap;
 
 	for(unsigned int i = 0;i < crossNum.size() ;i += 2)
 	{
@@ -396,45 +397,38 @@ void Nature::cross() {
 		}
 
 		//处理产生的冲突基因
-		for(int j = 1;j < p1;j++)
-			for(int k = p1;k <= p2;k++)
-			{
-				if(group[n1].points[j] == group[n1].points[k])
-				{
-					group[n1].points[j]=map1[group[n1].points[j]];
-					k = p1 - 1;       //从头开始找 
-				}
+		for(int j = 1; j < p1; j++) {
+			itMap = map1.find(group[n1].points[j]);
+			while (itMap != map1.end()) {
+				group[n1].points[j] = itMap->second;
+				itMap = map1.find(itMap->second);
 			}
-		
-		for(unsigned int j = p2 + 1;j < group[n1].points.size() - 1;j++)
-			for(int k = p1;k <= p2;k++)
-			{
-				if(group[n1].points[j] == group[n1].points[k])
-				{
-					group[n1].points[j]=map1[group[n1].points[j]];
-					k = p1 - 1;
-				}
+		}
+
+		for (unsigned int j = p2 + 1; j < group[n1].points.size() -1; j++) {
+			itMap = map1.find(group[n1].points[j]);
+			while (itMap != map1.end()) {
+				group[n1].points[j] = itMap->second;
+				itMap = map1.find(itMap->second);
 			}
-		
-		for(int j = 1;j < p1;j++)
-			for(int k = p1;k <= p2;k++)
-			{
-				if(group[n2].points[j] == group[n2].points[k])
-				{
-					group[n2].points[j]=map2[group[n2].points[j]];
-					k = p1 - 1;
-				}
+		}
+
+		for (int j = 1; j < p1; j++) {
+			itMap = map2.find(group[n2].points[j]);
+			while (itMap != map2.end()) {
+				group[n2].points[j] = itMap->second;
+				itMap = map2.find(itMap->second);
 			}
-		
-		for(unsigned int j = p2 + 1;j < group[n2].points.size() - 1;j++)
-			for(int k = p1;k <= p2;k++)
-			{
-				if(group[n2].points[j] == group[n2].points[k])
-				{
-					group[n2].points[j]=map2[group[n2].points[j]];
-					k = p1 - 1;
-				}
+		}
+
+		for (unsigned int j = p2 + 1; j < group[n2].points.size() -1; j++) {
+			itMap = map2.find(group[n2].points[j]);
+			while (itMap != map2.end()) {
+				group[n2].points[j] = itMap->second;
+				itMap = map2.find(itMap->second);
 			}
+		}
+
 	}
 
 
