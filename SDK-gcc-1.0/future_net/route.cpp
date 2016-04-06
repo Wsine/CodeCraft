@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <string.h>
 #include <vector>
+#include <queue>
 #include <iostream>
 #include <list>
 #include <map>
@@ -38,6 +39,7 @@ public:
 	void initGroup();
 	void calFitness();
 	void insertValue();
+	bool insertValue2();
 	void dfsInit(Array& path);
 	void dfs(int from, int to, int weight, int depth, Array& path);
 	void print();
@@ -67,15 +69,19 @@ struct Map {
 
 Map matrix[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
 vector<int> table[MAX_MATRIX_LENGTH];
+vector< vector<int> > prePath[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
 
 int matrixLength;
 int source, destination;
 vector<int> v_demand;
 List bestRouteInHistory;
 int best_weight;
+int storePathFrom, storePathTo;
+bool storePathVisited[MAX_MATRIX_LENGTH];
 
 void record_path(Array&);
 void print_route(List&);
+void dfsStroePath(int from, int to, int weight, int depth, Array& path);
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
@@ -120,6 +126,8 @@ void read_map(char *topo[5000], int edge_num) {
 void read_demand(char *readline) {
 	char reqs[3000];
 	sscanf(readline, "%d,%d,%s", &source, &destination, reqs);
+	storePathVisited[source] = true;
+	storePathVisited[destination] = true;
 
 	char *pch;
 	int temp;
@@ -127,6 +135,7 @@ void read_demand(char *readline) {
 	while(pch != NULL){
 		sscanf(pch, "%d", &temp);
 		v_demand.push_back(temp);
+		storePathVisited[temp] = true;
 		pch = strtok(NULL, "|");
 	}
 }
@@ -184,7 +193,12 @@ void Group::initGroup() {
 }
 
 void Group::calFitness() {
-	this->insertValue();
+	// this->insertValue();
+	bool insertResult = this->insertValue2();
+	if (!insertResult) {
+		this->route.clear();
+		return;
+	}
 	#if DEBUG
 	// printf("insert successfully\n");
 	#endif
@@ -294,6 +308,83 @@ void Group::dfs(int from, int to, int weight, int depth, Array& path) {
 			path.pop_back();
 		}
 	}
+}
+
+bool Group::insertValue2() {
+	memset(this->visited, false, sizeof(this->visited));
+	this->route.clear();
+	Array::iterator it = this->points.begin();
+	for (; it != this->points.end(); it++) {
+		this->route.push_back(*it);
+		this->visited[*it] = true;
+	}
+
+	srand((unsigned)time(NULL));
+	vector<int> part_route;
+	vector<int>::iterator it;
+	List::iterator itList = this->route.begin();
+	List::iterator itListNext = itList;
+	itListNext++;
+	for (; itListNext != this->route.end(); itList++, itListNext++) {
+		if (matrix[*itList][*itListNext].weight == -1) {
+			int pathNum = prePath[*itList][*itListNext].size();
+			bool insertPartResult = false;
+			if (pathNum > 0) {
+				int tryNum = 0;
+				while (!insertPartResult && tryNum < pathNum) {
+					int randIndex = (rand() % pathNum);
+					part_route = prePath[*itList][*itListNext][randIndex];
+					bool checkVisited = false;
+					for (it = part_route.begin(); it != part_route.end(); it++) {
+						if (this->visited[*it]) {
+							checkVisited = true;
+							break;
+						}
+					}
+					if (!checkVisited) {
+						for (it = part_route.begin(); it != part_route.end(); it++) {
+							this->visited[*it] = true;
+							this->route.insert(itListNext, *it);
+							itList++;
+						}
+						insertPartResult = true;
+					} else {
+						tryNum++;
+					}
+				}
+			}
+			if (!insertPartResult) return false;
+		} else {
+			double cross_p = (rand() % 100) * 1.0 / 100;
+			if (cross_p < DFS_PROB) {
+				int pathNum = prePath[*itList][*itListNext].size();
+				if (pathNum > 0) {
+					bool insertPartResult = false;
+					int randIndex = (rand() % pathNum);
+					part_route = prePath[*itList][*itListNext][randIndex];
+					int weight = 0, cur = *itList;
+					for (it = part_route.begin(); it != part_route.end(); it++) {
+						if (!this->visited[*it]) {
+							weight += matrix[cur][*it].weight;
+							cur = *it;
+						} else {
+							weight = -1;
+							break;
+						}
+					}
+					if (weight != -1 && 
+						weight + matrix[cur][*itListNext].weight < matrix[*itList][*itListNext].weight) {
+						for (it = part_route.begin(); it != part_route.end(); it++) {
+							this->visited[*it] = true;
+							this->route.insert(itListNext, *it);
+							itList++;
+						}
+					}
+				}
+			}
+		}
+	}
+	return true;
 }
 
 void Group::print() {
@@ -523,4 +614,55 @@ void print_route(List& arr) {
 		printf("%d ",*it_cur);
 	}
 	printf("\n");
+}
+
+void store_path() {
+	Array dfs_path;
+	vector<int>::iterator it1, it2;
+	for (it1 = v_demand.begin(); it1 != v_demand.end(); it1++) {
+		storePathFrom = *it1;
+		for (it2 = v_demand.begin(); it2 != v_demand.end(); it2++) {
+			if (it2 != it1) {
+				storePathTo = *it2;
+				dfs_path.clear();
+				dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+			}
+		}
+		storePathTo = destination;
+		dfs_path.clear();
+		dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+	}
+
+	storePathFrom = source;
+	for (it2 = v_demand.begin(); it2 != v_demand.end(); it2++) {
+		if (it2 != it1) {
+			storePathTo = *it2;
+			dfs_path.clear();
+			dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+		}
+	}
+	storePathTo = destination;
+	dfs_path.clear();
+	dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+}
+
+void dfsStroePath(int from, int to, int weight, int depth, Array& path) {
+	if (from == to) {
+		if (!path.empty()) 
+			prePath[storePathFrom][storePathTo].push_back(path);
+		return;
+	}
+	if (depth > 5)	return;
+	vector<int>::iterator it = table[from].begin();
+	for (; it != table[from].end(); it++) {
+		if (!storePathVisited[*it]) {
+			storePathVisited[*it] = true;
+			path.push_back(*it);
+			dfsStroePath(*it, to, weight + matrix[from][*it], depth + 1, path);
+			path.pop_back();
+			storePathVisited[*it] = false;
+		} else if (*it == storePathTo) {
+			dfsStroePath(*it, to, weight + matrix[from][*it], depth + 1, path);
+		}
+	}
 }
