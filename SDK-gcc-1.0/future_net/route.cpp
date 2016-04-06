@@ -340,14 +340,16 @@ void Nature::select() {
 	sort(group, group + GROUP_NUM, cmp);
 	int bais = GROUP_NUM/SELECT_DIVIDE;
 	/*Select the top 25% and worest 25%*/
+	int doublebais = bais * 2;
 
 	for(int i  = 0;i < bais;i++){
 		group[i + bais] = group[i];
+		group[i + doublebais] = group[i];
 	}
 	
-	for(int i  = bais * (SELECT_DIVIDE - 1);i < GROUP_NUM;i++){
-		group[i - bais] = group[i];
-	}
+	// for(int i  = bais * (SELECT_DIVIDE - 1);i < GROUP_NUM;i++){
+	// 	group[i - bais] = group[i];
+	// }
 }
 
 void Nature::cross() {
