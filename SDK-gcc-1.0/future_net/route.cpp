@@ -6,10 +6,10 @@
 #include <limits.h>
 #include <string.h>
 #include <vector>
-#include <queue>
 #include <iostream>
 #include <list>
 #include <map>
+#include <utility>
 using namespace std;
 
 #define DEBUG 0
@@ -69,7 +69,7 @@ struct Map {
 
 Map matrix[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
 vector<int> table[MAX_MATRIX_LENGTH];
-vector< vector<int> > prePath[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
+vector< pair<vector<int>, int> > prePath[MAX_MATRIX_LENGTH][MAX_MATRIX_LENGTH];
 
 int matrixLength;
 int source, destination;
@@ -83,6 +83,7 @@ int maxStorePathDfsDepth;
 void record_path(Array&);
 void print_route(List&);
 void dfsStroePath(int from, int to, int weight, int depth, Array& path);
+bool prePathCmp(const pair<vector<int>, int>& a, const pair<vector<int>, int>& b);
 
 //你要完成的功能总入口
 void search_route(char *topo[5000], int edge_num, char *demand) {
@@ -328,13 +329,16 @@ bool Group::insertValue2() {
 	itListNext++;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
 		if (matrix[*itList][*itListNext].weight == -1) {
-			int pathNum = prePath[*itList][*itListNext].size();
+			// int pathNum = prePath[*itList][*itListNext].route.size();
+			int pathNum = (prePath[*itList][*itListNext].size() > 1) 
+				? prePath[*itList][*itListNext].size() / 2 
+				: prePath[*itList][*itListNext].size();
 			bool insertPartResult = false;
 			if (pathNum > 0) {
 				int tryNum = 0;
 				while (!insertPartResult && tryNum < pathNum) {
 					int randIndex = (rand() % pathNum);
-					part_route = prePath[*itList][*itListNext][randIndex];
+					part_route = prePath[*itList][*itListNext][randIndex].first;
 					bool checkVisited = false;
 					for (it = part_route.begin(); it != part_route.end(); it++) {
 						if (this->visited[*it]) {
@@ -358,10 +362,13 @@ bool Group::insertValue2() {
 		} else {
 			double cross_p = (rand() % 100) * 1.0 / 100;
 			if (cross_p < DFS_PROB) {
-				int pathNum = prePath[*itList][*itListNext].size();
+				// int pathNum = prePath[*itList][*itListNext].route.size();
+				int pathNum = (prePath[*itList][*itListNext].size() > 1) 
+					? prePath[*itList][*itListNext].size() / 2 
+					: prePath[*itList][*itListNext].size();
 				if (pathNum > 0) {
 					int randIndex = (rand() % pathNum);
-					part_route = prePath[*itList][*itListNext][randIndex];
+					part_route = prePath[*itList][*itListNext][randIndex].first;
 					int weight = 0, cur = *itList;
 					for (it = part_route.begin(); it != part_route.end(); it++) {
 						if (!this->visited[*it]) {
@@ -628,11 +635,17 @@ void store_path() {
 				storePathTo = *it2;
 				dfs_path.clear();
 				dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+				sort(prePath[storePathFrom][storePathTo].begin(),
+					 prePath[storePathFrom][storePathTo].end(),
+					 prePathCmp);
 			}
 		}
 		storePathTo = destination;
 		dfs_path.clear();
 		dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+		sort(prePath[storePathFrom][storePathTo].begin(),
+			 prePath[storePathFrom][storePathTo].end(),
+			 prePathCmp);
 	}
 
 	storePathFrom = source;
@@ -640,16 +653,23 @@ void store_path() {
 		storePathTo = *it2;
 		dfs_path.clear();
 		dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+		sort(prePath[storePathFrom][storePathTo].begin(),
+			 prePath[storePathFrom][storePathTo].end(),
+			 prePathCmp);
 	}
 	storePathTo = destination;
 	dfs_path.clear();
 	dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
+	sort(prePath[storePathFrom][storePathTo].begin(),
+		 prePath[storePathFrom][storePathTo].end(),
+		 prePathCmp);
 }
 
 void dfsStroePath(int from, int to, int weight, int depth, Array& path) {
 	if (from == to) {
-		if (!path.empty()) 
-			prePath[storePathFrom][storePathTo].push_back(path);
+		if (!path.empty()) {
+			prePath[storePathFrom][storePathTo].push_back(make_pair(path, weight));
+		}
 		return;
 	}
 	if (depth > maxStorePathDfsDepth)	return;
@@ -665,4 +685,8 @@ void dfsStroePath(int from, int to, int weight, int depth, Array& path) {
 			dfsStroePath(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 		}
 	}
+}
+
+bool prePathCmp(const pair<vector<int>, int>& a, const pair<vector<int>, int>& b) {
+	return a.second < b.second;
 }
