@@ -20,7 +20,7 @@ using namespace std;
 #define HETERO_PROB 0.6
 #define SELECT_DIVIDE 4
 #define DFS_PROB 0.8
-#define ITERATIONS 1000
+#define ITERATIONS 1500
 
 typedef vector<int> Array;
 typedef list<int> List;
@@ -329,16 +329,19 @@ bool Group::insertValue2() {
 	itListNext++;
 	for (; itListNext != this->route.end(); itList++, itListNext++) {
 		if (matrix[*itList][*itListNext].weight == -1) {
-			// int pathNum = prePath[*itList][*itListNext].route.size();
-			int pathNum = (prePath[*itList][*itListNext].size() > 1) 
-				? prePath[*itList][*itListNext].size() / 2 
-				: prePath[*itList][*itListNext].size();
+			int pathNum = prePath[*itList][*itListNext].size();
+			// int pathNum = (prePath[*itList][*itListNext].size() > 1) 
+			// 	? prePath[*itList][*itListNext].size() / 2 
+			// 	: prePath[*itList][*itListNext].size();
 			bool insertPartResult = false;
 			if (pathNum > 0) {
+				// int *pathIndexArray = new int[pathNum];
+				// for (int i = 0; i < pathNum; i++)	pathIndexArray[i] = i;
+				// random_shuffle(pathIndexArray, pathIndexArray + pathNum);
 				int tryNum = 0;
 				while (!insertPartResult && tryNum < pathNum) {
-					int randIndex = (rand() % pathNum);
-					part_route = prePath[*itList][*itListNext][randIndex].first;
+					// part_route = prePath[*itList][*itListNext][pathIndexArray[tryNum]].first;
+					part_route = prePath[*itList][*itListNext][tryNum].first;
 					bool checkVisited = false;
 					for (it = part_route.begin(); it != part_route.end(); it++) {
 						if (this->visited[*it]) {
@@ -357,36 +360,46 @@ bool Group::insertValue2() {
 						tryNum++;
 					}
 				}
+				// delete [] pathIndexArray;
 			}
 			if (!insertPartResult) return false;
 		} else {
 			double cross_p = (rand() % 100) * 1.0 / 100;
 			if (cross_p < DFS_PROB) {
-				// int pathNum = prePath[*itList][*itListNext].route.size();
-				int pathNum = (prePath[*itList][*itListNext].size() > 1) 
-					? prePath[*itList][*itListNext].size() / 2 
-					: prePath[*itList][*itListNext].size();
+				int pathNum = prePath[*itList][*itListNext].size();
+				// int pathNum = (prePath[*itList][*itListNext].size() > 1) 
+				// 	? prePath[*itList][*itListNext].size() / 2 
+				// 	: prePath[*itList][*itListNext].size();
 				if (pathNum > 0) {
-					int randIndex = (rand() % pathNum);
-					part_route = prePath[*itList][*itListNext][randIndex].first;
-					int weight = 0, cur = *itList;
-					for (it = part_route.begin(); it != part_route.end(); it++) {
-						if (!this->visited[*it]) {
-							weight += matrix[cur][*it].weight;
-							cur = *it;
-						} else {
-							weight = -1;
+					// int *pathIndexArray = new int[pathNum];
+					// for (int i = 0; i < pathNum; i++)	pathIndexArray[i] = i;
+					// random_shuffle(pathIndexArray, pathIndexArray + pathNum);
+					int tryNum = 0;
+					while (tryNum < pathNum) {
+						// part_route = prePath[*itList][*itListNext][pathIndexArray[tryNum]].first;
+						part_route = prePath[*itList][*itListNext][tryNum].first;
+						int weight = 0, cur = *itList;
+						for (it = part_route.begin(); it != part_route.end(); it++) {
+							if (!this->visited[*it]) {
+								weight += matrix[cur][*it].weight;
+								cur = *it;
+							} else {
+								weight = -1;
+								break;
+							}
+						}
+						if (weight != -1 && 
+							weight + matrix[cur][*itListNext].weight < matrix[*itList][*itListNext].weight) {
+							for (it = part_route.begin(); it != part_route.end(); it++) {
+								this->visited[*it] = true;
+								this->route.insert(itListNext, *it);
+								itList++;
+							}
 							break;
 						}
+						tryNum++;
 					}
-					if (weight != -1 && 
-						weight + matrix[cur][*itListNext].weight < matrix[*itList][*itListNext].weight) {
-						for (it = part_route.begin(); it != part_route.end(); it++) {
-							this->visited[*it] = true;
-							this->route.insert(itListNext, *it);
-							itList++;
-						}
-					}
+					// delete [] pathIndexArray;
 				}
 			}
 		}
@@ -459,6 +472,7 @@ void Nature::cross() {
 		if(cross_p < CROSS_PROB)
 			crossNum.push_back(i);
 	}
+	random_shuffle(crossNum.begin(), crossNum.end());
 
 	int p1,p2 ; //交换基因断点 
 	map<int, int> map1,map2;
@@ -606,6 +620,7 @@ void startGene()
 		printf("%d ",*it_cur);
 	}
 	printf("%d \n",*it_cur); //last element
+	printf("final weight is %d\n", sum_cost);
 
 	record_path(edge);
 
