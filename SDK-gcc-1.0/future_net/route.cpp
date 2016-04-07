@@ -20,7 +20,7 @@ using namespace std;
 #define HETERO_PROB 0.6
 #define SELECT_DIVIDE 4
 #define DFS_PROB 0.8
-#define ITERATIONS 500
+#define ITERATIONS 1000
 
 typedef vector<int> Array;
 typedef list<int> List;
@@ -78,6 +78,7 @@ List bestRouteInHistory;
 int best_weight;
 int storePathFrom, storePathTo;
 bool storePathVisited[MAX_MATRIX_LENGTH];
+int maxStorePathDfsDepth;
 
 void record_path(Array&);
 void print_route(List&);
@@ -93,6 +94,7 @@ void search_route(char *topo[5000], int edge_num, char *demand) {
 	#if DEBUG
 	// print_demand();
 	#endif
+	store_path();
 	best_weight = INF;
 	startGene();
 }
@@ -321,7 +323,6 @@ bool Group::insertValue2() {
 
 	srand((unsigned)time(NULL));
 	vector<int> part_route;
-	vector<int>::iterator it;
 	List::iterator itList = this->route.begin();
 	List::iterator itListNext = itList;
 	itListNext++;
@@ -359,7 +360,6 @@ bool Group::insertValue2() {
 			if (cross_p < DFS_PROB) {
 				int pathNum = prePath[*itList][*itListNext].size();
 				if (pathNum > 0) {
-					bool insertPartResult = false;
 					int randIndex = (rand() % pathNum);
 					part_route = prePath[*itList][*itListNext][randIndex];
 					int weight = 0, cur = *itList;
@@ -431,16 +431,16 @@ void Nature::select() {
 	sort(group, group + GROUP_NUM, cmp);
 	int bais = GROUP_NUM/SELECT_DIVIDE;
 	/*Select the top 25% and worest 25%*/
-	int doublebais = bais * 2;
+	// int doublebais = bais * 2;
 
 	for(int i  = 0;i < bais;i++){
 		group[i + bais] = group[i];
-		group[i + doublebais] = group[i];
+		// group[i + doublebais] = group[i];
 	}
 	
-	// for(int i  = bais * (SELECT_DIVIDE - 1);i < GROUP_NUM;i++){
-	// 	group[i - bais] = group[i];
-	// }
+	for(int i  = bais * (SELECT_DIVIDE - 1);i < GROUP_NUM;i++){
+		group[i - bais] = group[i];
+	}
 }
 
 void Nature::cross() {
@@ -617,6 +617,8 @@ void print_route(List& arr) {
 }
 
 void store_path() {
+	maxStorePathDfsDepth = (matrixLength < 50) ? 5 : matrixLength / 10;
+
 	Array dfs_path;
 	vector<int>::iterator it1, it2;
 	for (it1 = v_demand.begin(); it1 != v_demand.end(); it1++) {
@@ -635,11 +637,9 @@ void store_path() {
 
 	storePathFrom = source;
 	for (it2 = v_demand.begin(); it2 != v_demand.end(); it2++) {
-		if (it2 != it1) {
-			storePathTo = *it2;
-			dfs_path.clear();
-			dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
-		}
+		storePathTo = *it2;
+		dfs_path.clear();
+		dfsStroePath(storePathFrom, storePathTo, 0, 0, dfs_path);
 	}
 	storePathTo = destination;
 	dfs_path.clear();
@@ -652,17 +652,17 @@ void dfsStroePath(int from, int to, int weight, int depth, Array& path) {
 			prePath[storePathFrom][storePathTo].push_back(path);
 		return;
 	}
-	if (depth > 5)	return;
+	if (depth > maxStorePathDfsDepth)	return;
 	vector<int>::iterator it = table[from].begin();
 	for (; it != table[from].end(); it++) {
 		if (!storePathVisited[*it]) {
 			storePathVisited[*it] = true;
 			path.push_back(*it);
-			dfsStroePath(*it, to, weight + matrix[from][*it], depth + 1, path);
+			dfsStroePath(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 			path.pop_back();
 			storePathVisited[*it] = false;
 		} else if (*it == storePathTo) {
-			dfsStroePath(*it, to, weight + matrix[from][*it], depth + 1, path);
+			dfsStroePath(*it, to, weight + matrix[from][*it].weight, depth + 1, path);
 		}
 	}
 }
